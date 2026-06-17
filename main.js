@@ -814,19 +814,101 @@ const App = {
             <label class="form-label">내용</label>
             <textarea class="form-textarea" id="wContent" placeholder="내용을 입력하세요..."></textarea>
           </div>
+          <div class="form-group">
+            <label class="form-label">미디어 첨부 <span class="form-hint">선택사항</span></label>
+            <div class="media-box">
+              <div class="media-tabs">
+                <button type="button" class="mtab active" id="mtabImg">🖼️ 사진</button>
+                <button type="button" class="mtab" id="mtabVid">🎬 영상 URL</button>
+              </div>
+              <div id="mpImg" class="media-panel">
+                <div class="img-drop-zone" id="imgDropZone">
+                  <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none">
+                  <div class="img-drop-inner">
+                    <div style="font-size:36px;margin-bottom:8px">📷</div>
+                    <div style="font-weight:600">클릭하거나 드래그해서 사진 업로드</div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">최대 5장 · 각 10MB 이하 · 자동 압축 적용</div>
+                  </div>
+                </div>
+                <div class="img-preview-grid" id="imgPreviewGrid"></div>
+              </div>
+              <div id="mpVid" class="media-panel" style="display:none">
+                <input type="text" class="form-input" id="vidUrlInput" placeholder="YouTube 링크 또는 영상 파일 URL (예: https://youtu.be/...)">
+                <div id="vidPreviewBox" style="margin-top:12px"></div>
+              </div>
+            </div>
+          </div>
           <div class="write-actions">
             <button class="btn-outline" onclick="history.back()">취소</button>
             <button class="btn-primary" id="wSubmit">게시하기</button>
           </div>
         </div>
       </div>`;
+
+    // 미디어 탭 전환
+    document.getElementById('mtabImg').addEventListener('click', () => {
+      document.getElementById('mpImg').style.display = '';
+      document.getElementById('mpVid').style.display = 'none';
+      document.getElementById('mtabImg').classList.add('active');
+      document.getElementById('mtabVid').classList.remove('active');
+    });
+    document.getElementById('mtabVid').addEventListener('click', () => {
+      document.getElementById('mpImg').style.display = 'none';
+      document.getElementById('mpVid').style.display = '';
+      document.getElementById('mtabImg').classList.remove('active');
+      document.getElementById('mtabVid').classList.add('active');
+    });
+
+    // 이미지 업로드
+    const dropZone = document.getElementById('imgDropZone');
+    const fileInput = document.getElementById('imgFileInput');
+    const previewGrid = document.getElementById('imgPreviewGrid');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+    fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+    async function handleFiles(files) {
+      const existing = previewGrid.querySelectorAll('.img-preview-item').length;
+      const slots = 5 - existing;
+      if (slots <= 0) { toast('최대 5장까지 첨부할 수 있습니다.'); return; }
+      const toProcess = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, slots);
+      for (const file of toProcess) {
+        if (file.size > 10 * 1024 * 1024) { toast(`${file.name}: 10MB를 초과합니다.`); continue; }
+        toast('이미지 처리 중...');
+        const compressed = await compressImage(file);
+        const item = document.createElement('div');
+        item.className = 'img-preview-item';
+        item.innerHTML = `<img src="${compressed}" alt="미리보기"><button class="img-remove-btn" type="button" title="삭제">✕</button>`;
+        item.querySelector('.img-remove-btn').addEventListener('click', () => item.remove());
+        previewGrid.appendChild(item);
+      }
+    }
+
+    // 영상 URL 미리보기
+    document.getElementById('vidUrlInput').addEventListener('input', function() {
+      const box = document.getElementById('vidPreviewBox');
+      const v = parseVideoUrl(this.value.trim());
+      if (v?.type === 'youtube') {
+        box.innerHTML = `<div class="post-video-wrap"><iframe src="${v.embedUrl}" frameborder="0" allowfullscreen></iframe></div>`;
+      } else if (v?.type === 'direct') {
+        box.innerHTML = `<div class="post-video-wrap"><video src="${v.url}" controls></video></div>`;
+      } else {
+        box.innerHTML = this.value.trim() ? '<p style="font-size:13px;color:var(--text-muted)">유효한 YouTube URL 또는 영상 URL을 입력하세요.</p>' : '';
+      }
+    });
+
     document.getElementById('wSubmit').addEventListener('click', () => {
       const bid = document.getElementById('wBoard').value;
       const title = document.getElementById('wTitle').value.trim();
       const content = document.getElementById('wContent').value.trim();
       if (!title) { toast('제목을 입력하세요.'); return; }
       if (!content) { toast('내용을 입력하세요.'); return; }
-      const p = Data.addPost({ boardId: bid, title, content, author: Auth.current.nickname, authorId: Auth.current.id });
+      const images = Array.from(previewGrid.querySelectorAll('.img-preview-item img')).map(img => img.src);
+      const video = document.getElementById('vidUrlInput').value.trim();
+      const p = Data.addPost({ boardId: bid, title, content, author: Auth.current.nickname, authorId: Auth.current.id, images, video });
       toast('게시글이 등록되었습니다!');
       Router.go('/p/' + p.id);
     });
