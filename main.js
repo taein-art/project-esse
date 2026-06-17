@@ -1008,7 +1008,82 @@ const App = {
             </table>
           </div>
         </div>
+
+        <div class="admin-section">
+          <div class="admin-section-header">📥 콘텐츠 가져오기 (Hacker News)</div>
+          <div class="import-box">
+            <p style="margin:0 0 12px;color:var(--text-muted);font-size:14px">Hacker News 인기글을 실시간으로 가져와 관리자 계정으로 등록합니다.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <select id="importBoard" class="form-input" style="width:auto;padding:8px 12px">
+                ${AppState.boards.map(b => `<option value="${b.id}">${b.icon} ${b.name}</option>`).join('')}
+              </select>
+              <select id="importCount" class="form-input" style="width:auto;padding:8px 12px">
+                <option value="5">5개</option>
+                <option value="10" selected>10개</option>
+                <option value="20">20개</option>
+              </select>
+              <button class="btn-primary" id="importBtn" onclick="App.importFromHN()">HN 글 가져오기</button>
+            </div>
+            <div id="importStatus" style="margin-top:10px;font-size:14px;color:var(--text-muted)"></div>
+          </div>
+        </div>
       </div>`;
+  },
+
+  async importFromHN() {
+    const boardId = document.getElementById('importBoard')?.value;
+    const count = parseInt(document.getElementById('importCount')?.value || '10');
+    const btn = document.getElementById('importBtn');
+    const status = document.getElementById('importStatus');
+    if (!boardId || !btn) return;
+    btn.disabled = true;
+    btn.textContent = '가져오는 중...';
+    status.textContent = 'HN 상위 글 목록 조회 중...';
+    try {
+      const topRes = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+      const topIds = await topRes.json();
+      const existing = new Set(AppState.posts.map(p => p.id.replace('hn_', '')));
+      const candidates = topIds.filter(id => !existing.has(String(id)));
+      const toFetch = candidates.slice(0, count * 3);
+      const items = [];
+      for (const id of toFetch) {
+        if (items.length >= count) break;
+        try {
+          const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+          const item = await r.json();
+          if (!item || !item.title || item.dead || item.deleted) continue;
+          const content = (item.url ? `🔗 원문: ${item.url}\n\n` : '') +
+            (item.text ? item.text.replace(/<[^>]+>/g, '') + '\n\n' : '') +
+            `[Hacker News] 추천 ${item.score||0}점 · 댓글 ${item.descendants||0}개 · by ${item.by||'익명'}`;
+          items.push({
+            id: `hn_${item.id}`,
+            boardId,
+            title: item.title,
+            content,
+            author: '관리자',
+            authorId: ADMIN_ID,
+            upvotes: item.score || 0,
+            downvotes: 0,
+            views: 0,
+            createdAt: (item.time || Math.floor(Date.now()/1000)) * 1000,
+            commentCount: 0,
+            images: [],
+            video: '',
+          });
+          status.textContent = `${items.length}/${count}개 수집 중...`;
+        } catch(_) {}
+      }
+      if (items.length === 0) { status.textContent = '가져올 새 글이 없습니다.'; btn.disabled = false; btn.textContent = 'HN 글 가져오기'; return; }
+      const all = [... items, ...AppState.posts];
+      S.set('posts', all);
+      AppState.posts = all;
+      status.innerHTML = `<span style="color:var(--success)">✓ ${items.length}개 글을 성공적으로 가져왔습니다!</span>`;
+      toast(`HN에서 ${items.length}개 글을 가져왔습니다`);
+    } catch(e) {
+      status.textContent = '오류: ' + e.message;
+    }
+    btn.disabled = false;
+    btn.textContent = 'HN 글 가져오기';
   },
 
   openImg(idx, postId) {
