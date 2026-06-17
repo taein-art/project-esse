@@ -1,21 +1,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #FF4500;
-  --primary-dark: #CC3700;
-  --bg: #DAE0E6;
-  --bg-hover: #F6F7F8;
-  --text: #1C1C1C;
-  --text-muted: #878A8C;
-  --border: #EDEFF1;
+  --primary: #4B5320;
+  --primary-dark: #363C18;
+  --bg: #D5D8C6;
+  --bg-hover: #E4E7D8;
+  --text: #1C1E14;
+  --text-muted: #7A7D6A;
+  --border: #C2C6B0;
   --sidebar-w: 240px;
   --header-h: 48px;
-  --upvote: #FF4500;
-  --downvote: #7193FF;
-  --danger: #DC3545;
-  --warning: #E8A838;
-  --success: #28A745;
-  --admin: #7B2FBE;
+  --upvote: #4B5320;
+  --downvote: #6B7A9E;
+  --danger: #8B3A2A;
+  --warning: #8B7A2A;
+  --success: #3A5E28;
+  --admin: #5A3A6B;
 }
 
 body {
