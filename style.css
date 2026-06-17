@@ -410,9 +410,7 @@ body {
   .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
 }
 @media (max-width: 700px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
-  #main { margin-left: 0; padding: 12px; }
+  #main { padding: 12px; }
   .header-search { max-width: 160px; }
   .post-detail, .write-page, .admin-panel { max-width: 100%; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
