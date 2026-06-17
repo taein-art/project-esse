@@ -739,6 +739,7 @@ const App = {
             <h1 class="post-detail-title">${esc(post.title)}</h1>
           </div>
           <div class="post-detail-body">${esc(post.content)}</div>
+          ${renderPostMedia(post)}
           <div class="post-detail-footer">
             <div class="vote-bar">
               <button class="vote-bar-btn${uv==='up'?' voted':''}" id="dvUp">▲ 추천 ${post.upvotes}</button>
