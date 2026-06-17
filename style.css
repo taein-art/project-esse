@@ -400,6 +400,7 @@ body {
 .admin-table tr:last-child td { border-bottom: none; }
 .admin-table tr:hover td { background: var(--bg-hover); }
 .admin-table .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.import-box { padding: 20px; background: var(--bg-hover); border-radius: 8px; margin: 16px; }
 
 .admin-username { font-weight: 700; color: var(--text); }
 .admin-you { font-size: 11px; color: var(--primary); margin-left: 4px; }
