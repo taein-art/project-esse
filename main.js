@@ -320,6 +320,24 @@ function commentItem(c) {
     </div>`;
 }
 
+function renderPostMedia(post) {
+  let html = '';
+  if (post.images?.length) {
+    html += `<div class="post-img-gallery">${post.images.map((src, i) =>
+      `<img class="post-img-thumb" src="${src}" alt="첨부 이미지 ${i+1}" onclick="App.openImg('${i}','${post.id}')">`
+    ).join('')}</div>`;
+  }
+  if (post.video) {
+    const v = parseVideoUrl(post.video);
+    if (v?.type === 'youtube') {
+      html += `<div class="post-video-wrap"><iframe src="${v.embedUrl}" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe></div>`;
+    } else if (v?.type === 'direct') {
+      html += `<div class="post-video-wrap"><video src="${v.url}" controls></video></div>`;
+    }
+  }
+  return html;
+}
+
 function sortBar(active) {
   return `<div class="sort-bar">
     <span class="sort-label">정렬:</span>
