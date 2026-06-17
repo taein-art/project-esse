@@ -291,9 +291,12 @@ function postCard(post, showBoard) {
           <span>${esc(post.author)}</span><span>·</span>
           <span>${timeAgo(post.createdAt)}</span><span>·</span>
           <span>👁 ${post.views||0}</span>
+          ${post.images?.length ? `<span class="media-badge">🖼 ${post.images.length}</span>` : ''}
+          ${post.video ? `<span class="media-badge">🎬</span>` : ''}
         </div>
         <div class="post-title"><a href="#/p/${post.id}">${esc(post.title)}</a></div>
         ${post.content ? `<div class="post-preview">${esc(post.content)}</div>` : ''}
+        ${post.images?.length ? `<img class="post-card-thumb" src="${post.images[0]}" alt="썸네일">` : ''}
         <div class="post-actions">
           <button class="post-action-btn" onclick="event.stopPropagation();Router.go('/p/${post.id}')">💬 댓글 ${cc}</button>
           <button class="post-action-btn" onclick="event.stopPropagation();App.share('${post.id}')">🔗 공유</button>
