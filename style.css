@@ -140,7 +140,6 @@ body {
 /* MAIN */
 #main {
   margin-top: var(--header-h);
-  margin-left: var(--sidebar-w);
   min-height: calc(100vh - var(--header-h));
   padding: 20px;
 }
