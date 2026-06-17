@@ -996,6 +996,35 @@ const App = {
       </div>`;
   },
 
+  openImg(idx, postId) {
+    const post = Data.post(postId);
+    if (!post?.images?.length) return;
+    let cur = parseInt(idx);
+    const lb = document.createElement('div');
+    lb.className = 'lightbox';
+    const render = () => {
+      lb.innerHTML = `
+        <div class="lightbox-inner">
+          <button class="lb-close" onclick="this.closest('.lightbox').remove()">✕</button>
+          ${post.images.length > 1 ? `<button class="lb-nav lb-prev" id="lbPrev">‹</button>` : ''}
+          <img src="${post.images[cur]}" alt="이미지 ${cur+1}">
+          ${post.images.length > 1 ? `<button class="lb-nav lb-next" id="lbNext">›</button>` : ''}
+          ${post.images.length > 1 ? `<div class="lb-counter">${cur+1} / ${post.images.length}</div>` : ''}
+        </div>`;
+      lb.querySelector('#lbPrev')?.addEventListener('click', e => { e.stopPropagation(); cur = (cur - 1 + post.images.length) % post.images.length; render(); });
+      lb.querySelector('#lbNext')?.addEventListener('click', e => { e.stopPropagation(); cur = (cur + 1) % post.images.length; render(); });
+    };
+    render();
+    lb.addEventListener('click', e => { if (e.target === lb) lb.remove(); });
+    document.addEventListener('keydown', function onKey(e) {
+      if (!document.body.contains(lb)) { document.removeEventListener('keydown', onKey); return; }
+      if (e.key === 'Escape') lb.remove();
+      if (e.key === 'ArrowLeft') { cur = (cur - 1 + post.images.length) % post.images.length; render(); }
+      if (e.key === 'ArrowRight') { cur = (cur + 1) % post.images.length; render(); }
+    });
+    document.body.appendChild(lb);
+  },
+
   adminBan(userId) {
     if (!confirm('이 회원을 차단할까요? 차단된 회원은 로그인할 수 없습니다.')) return;
     if (Auth.banUser(userId)) { toast('차단되었습니다.'); this.showAdmin(); }
