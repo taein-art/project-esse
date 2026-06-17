@@ -389,8 +389,28 @@ const App = {
   init() {
     Auth.init();
     AppState.boards = BOARDS;
-    AppState.posts = S.get('posts', SAMPLE_POSTS);
-    AppState.comments = S.get('comments', SAMPLE_COMMENTS);
+
+    // 기존 로컬스토리지에서 샘플 데이터 제거
+    let storedPosts = S.get('posts', null);
+    let storedComments = S.get('comments', null);
+    if (storedPosts) {
+      storedPosts = storedPosts.filter(p => p.authorId !== 'sample');
+      S.set('posts', storedPosts);
+    }
+    if (storedComments) {
+      storedComments = storedComments.filter(c => c.authorId !== 'sample');
+      S.set('comments', storedComments);
+    }
+
+    // HN 시드 데이터 주입 (관리자 글이 없을 때만)
+    const saved = S.get('posts', []);
+    const hasAdminContent = saved.some(p => p.authorId === ADMIN_ID);
+    if (!hasAdminContent) {
+      S.set('posts', [...HN_SEED, ...saved]);
+    }
+
+    AppState.posts = S.get('posts', HN_SEED);
+    AppState.comments = S.get('comments', []);
     AppState.posts.forEach(p => { p.commentCount = AppState.comments.filter(c => c.postId === p.id).length; });
     this.renderSidebar();
     this.bindGlobal();
